@@ -1,11 +1,12 @@
 import { Modal } from "./UI/Modal";
 import { Map } from "./UI/Map";
-import { getCoordsFromAddress } from "./Utility/Location";
+import { getCoordsFromAddress, getAddressFromCoords } from "./Utility/Location";
 
 class PlaceFinder {
     constructor(props) {
         const addressForm = document.querySelector("form");
         const locateUserBtn = document.getElementById("locate-btn");
+        this.shareBtn = document.getElementById("share-btn");
 
         locateUserBtn.addEventListener(
             "click",
@@ -15,14 +16,22 @@ class PlaceFinder {
             "submit",
             this.findAddressHandler.bind(this)
         );
+        //this.shareBtn.addEventListener("click");
     }
 
-    selectPlace(coordinates) {
+    selectPlace(coordinates, address) {
         if (this.map) {
             this.map.render(coordinates);
         } else {
             this.map = new Map(coordinates);
         }
+        this.shareBtn.disabled = false;
+        const shareLinkInputElement = document.getElementById("share-link");
+        shareLinkInputElement.value = `${
+            location.origin
+        }/my-place?address=${encodeURI(address)}&lat=${coordinates.lat}&lng=${
+            coordinates.lng
+        }`;
     }
 
     locateUserHandler() {
@@ -40,13 +49,14 @@ class PlaceFinder {
         modal.show();
 
         navigator.geolocation.getCurrentPosition(
-            (successResult) => {
-                modal.hide();
+            async (successResult) => {
                 const coordinates = {
                     lat: successResult.coords.latitude,
                     lng: successResult.coords.longitude,
                 };
-                this.selectPlace(coordinates);
+                const address = await getAddressFromCoords(coordinates);
+                modal.hide();
+                this.selectPlace(coordinates, address);
             },
             (error) => {
                 modal.hide();
@@ -75,13 +85,12 @@ class PlaceFinder {
 
         try {
             const coordinates = await getCoordsFromAddress(address);
-            this.selectPlace(coordinates);
-        } catch(error) {
+            this.selectPlace(coordinates, address);
+        } catch (error) {
             alert(error.message);
         }
 
         modal.hide();
-        
     }
 }
 
