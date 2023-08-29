@@ -16,7 +16,26 @@ class PlaceFinder {
             "submit",
             this.findAddressHandler.bind(this)
         );
-        //this.shareBtn.addEventListener("click");
+        this.shareBtn.addEventListener("click", this.sharePlaceHandler);
+    }
+
+    sharePlaceHandler() {
+        const shareLinkInputElement = document.getElementById("share-link");
+
+        if (!navigator.clipboard) {
+            shareLinkInputElement.select();
+            return;
+        }
+
+        navigator.clipboard
+            .writeText(shareLinkInputElement.value)
+            .then(() => {
+                alert("Copied into clipboard!");
+            })
+            .catch((err) => {
+                console.log(err.message);
+                shareLinkInputElement.select();
+            });
     }
 
     selectPlace(coordinates, address) {
